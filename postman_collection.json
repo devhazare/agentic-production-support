@@ -1,0 +1,435 @@
+{
+  "info": {
+    "name": "Agentic Support Framework - All APIs",
+    "description": "Postman collection for local FastAPI endpoints, MVP root endpoints, and the dedicated AWS Magento log generator Lambda route.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "aws_base_url",
+      "value": "https://t1fdcvm0zj.execute-api.ap-south-1.amazonaws.com"
+    },
+    {
+      "key": "api_prefix",
+      "value": "/api/v1"
+    },
+    {
+      "key": "incident_id",
+      "value": "INC-REPLACE-ME"
+    },
+    {
+      "key": "mvp_incident_id",
+      "value": "INC-POSTMAN-MVP-001"
+    }
+  ],
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Local Full API Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "health"]
+            }
+          }
+        },
+        {
+          "name": "MVP Root Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "AWS MVP Root Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{aws_base_url}}/health",
+              "host": ["{{aws_base_url}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "OpenAPI JSON",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/openapi.json",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "openapi.json"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Dashboard Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/dashboard/status",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "dashboard", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Full Pipeline API - /api/v1",
+      "item": [
+        {
+          "name": "Analyze Alert - CPU",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service\": \"payment-service\",\n  \"alert_type\": \"CPUUtilization\",\n  \"metrics\": {\n    \"cpu_percent\": 93.0,\n    \"error_rate\": 0.03,\n    \"latency_p99_ms\": 4500\n  },\n  \"logs_snippet\": \"ERROR: Thread pool exhausted. Queue size: 512.\",\n  \"severity\": \"HIGH\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/incidents/analyze",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "incidents", "analyze"]
+            }
+          }
+        },
+        {
+          "name": "Analyze Alert - DB Connections",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service\": \"order-service\",\n  \"alert_type\": \"DatabaseConnections\",\n  \"metrics\": {\n    \"cpu_percent\": 28.0,\n    \"error_rate\": 0.45,\n    \"db_connections\": 198,\n    \"db_max_connections\": 200\n  },\n  \"logs_snippet\": \"ERROR: HikariPool-1 Connection not available, timed out after 30000ms\",\n  \"severity\": \"CRITICAL\",\n  \"log_source\": \"java\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/incidents/analyze",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "incidents", "analyze"]
+            }
+          }
+        },
+        {
+          "name": "Analyze Alert - Magento Checkout",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service\": \"magento-checkout\",\n  \"alert_type\": \"LogAnomaly\",\n  \"metrics\": {\n    \"error_rate\": 0.32,\n    \"latency_p99_ms\": 6200\n  },\n  \"logs_snippet\": \"main.CRITICAL: Payment gateway timeout while placing order. SQLSTATE lock wait timeout exceeded.\",\n  \"severity\": \"HIGH\",\n  \"log_source\": \"magento\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/incidents/analyze",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "incidents", "analyze"]
+            }
+          }
+        },
+        {
+          "name": "Trigger Random Mock Incident",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/incidents/mock",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "incidents", "mock"]
+            }
+          }
+        },
+        {
+          "name": "Approve Full Pipeline Incident",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approved_by\": \"sre@example.com\",\n  \"comment\": \"Approved from Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/incidents/{{incident_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "incidents", "{{incident_id}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Reject Full Pipeline Incident",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approved_by\": \"sre@example.com\",\n  \"comment\": \"Rejected from Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/incidents/{{incident_id}}/reject",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "incidents", "{{incident_id}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "Sample Incident History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/incidents/history",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "incidents", "history"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RAG - /api/v1",
+      "item": [
+        {
+          "name": "RAG Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/rag/health",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "rag", "health"]
+            }
+          }
+        },
+        {
+          "name": "RAG Search",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"Magento checkout SQLSTATE lock wait timeout payment order failed\",\n  \"top_k\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/rag/search",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "rag", "search"]
+            }
+          }
+        },
+        {
+          "name": "RAG Rebuild",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}{{api_prefix}}/rag/rebuild",
+              "host": ["{{base_url}}"],
+              "path": ["{{api_prefix}}", "rag", "rebuild"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MVP Root API",
+      "item": [
+        {
+          "name": "Trigger MVP Incident",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"incident_id\": \"{{mvp_incident_id}}\",\n  \"service_name\": \"checkout-api\",\n  \"severity\": \"High\",\n  \"timestamp\": \"2026-06-28T10:00:00Z\",\n  \"alert_type\": \"LatencySpike\",\n  \"metric_name\": \"p99_latency_ms\",\n  \"metric_value\": 4200,\n  \"logs_summary\": \"Checkout API p99 latency breached threshold. Logs show database connection acquisition timeouts.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/incidents/trigger",
+              "host": ["{{base_url}}"],
+              "path": ["incidents", "trigger"]
+            }
+          }
+        },
+        {
+          "name": "AWS Trigger MVP Incident",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"incident_id\": \"{{mvp_incident_id}}-AWS\",\n  \"service_name\": \"checkout-api\",\n  \"severity\": \"High\",\n  \"timestamp\": \"2026-06-28T10:00:00Z\",\n  \"alert_type\": \"LatencySpike\",\n  \"metric_name\": \"p99_latency_ms\",\n  \"metric_value\": 4200,\n  \"logs_summary\": \"Checkout API p99 latency breached threshold. Logs show database connection acquisition timeouts.\"\n}"
+            },
+            "url": {
+              "raw": "{{aws_base_url}}/incidents/trigger",
+              "host": ["{{aws_base_url}}"],
+              "path": ["incidents", "trigger"]
+            }
+          }
+        },
+        {
+          "name": "List MVP Incidents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/incidents",
+              "host": ["{{base_url}}"],
+              "path": ["incidents"]
+            }
+          }
+        },
+        {
+          "name": "Get MVP Incident",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/incidents/{{mvp_incident_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["incidents", "{{mvp_incident_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Approve MVP Incident",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approver\": \"sre@example.com\",\n  \"comment\": \"Approved from Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/incidents/{{mvp_incident_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["incidents", "{{mvp_incident_id}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "Reject MVP Incident",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approver\": \"sre@example.com\",\n  \"comment\": \"Rejected from Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/incidents/{{mvp_incident_id}}/reject",
+              "host": ["{{base_url}}"],
+              "path": ["incidents", "{{mvp_incident_id}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "MVP Needs More Info",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approver\": \"sre@example.com\",\n  \"comment\": \"Need DB pool and checkout worker metrics\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/incidents/{{mvp_incident_id}}/needs-more-info",
+              "host": ["{{base_url}}"],
+              "path": ["incidents", "{{mvp_incident_id}}", "needs-more-info"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Knowledge Root API",
+      "item": [
+        {
+          "name": "Upload Knowledge",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Magento Checkout Payment Timeout Runbook\",\n  \"doc_type\": \"runbook\",\n  \"text\": \"If checkout payment calls timeout, check payment gateway latency, DB deadlocks, Redis pressure, and order placement queue workers.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/knowledge/upload",
+              "host": ["{{base_url}}"],
+              "path": ["knowledge", "upload"]
+            }
+          }
+        },
+        {
+          "name": "Reindex Knowledge",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/knowledge/reindex",
+              "host": ["{{base_url}}"],
+              "path": ["knowledge", "reindex"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Magento Logs Dedicated Lambda",
+      "item": [
+        {
+          "name": "AWS Generate Magento Logs",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"total_events\": 100,\n  \"fail_percent\": 20,\n  \"trigger_incidents\": true,\n  \"max_incidents\": 3\n}"
+            },
+            "url": {
+              "raw": "{{aws_base_url}}/magento/logs/generate",
+              "host": ["{{aws_base_url}}"],
+              "path": ["magento", "logs", "generate"]
+            },
+            "description": "Dedicated API Gateway route backed by ai-ops-mvp-dev-magento-logs-generator. Run Terraform apply first."
+          }
+        },
+        {
+          "name": "AWS Generate Magento Logs - No Incident Write",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"total_events\": 50,\n  \"fail_percent\": 10,\n  \"trigger_incidents\": false,\n  \"max_incidents\": 0\n}"
+            },
+            "url": {
+              "raw": "{{aws_base_url}}/magento/logs/generate",
+              "host": ["{{aws_base_url}}"],
+              "path": ["magento", "logs", "generate"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

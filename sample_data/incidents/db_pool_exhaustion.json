@@ -1,0 +1,11 @@
+{
+  "incident_id": "INC-1002",
+  "service_name": "orders-service",
+  "severity": "Medium",
+  "timestamp": "2026-06-27T10:05:00Z",
+  "alert_type": "DatabaseConnectionsHigh",
+  "metric_name": "db_connections_used",
+  "metric_value": 98,
+  "logs_summary": "HikariPool timeout waiting for connection after 30000ms. Active connections near max and request queue growing."
+}
+

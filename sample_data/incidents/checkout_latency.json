@@ -1,0 +1,11 @@
+{
+  "incident_id": "INC-1001",
+  "service_name": "checkout-api",
+  "severity": "High",
+  "timestamp": "2026-06-27T10:00:00Z",
+  "alert_type": "LatencySpike",
+  "metric_name": "p99_latency_ms",
+  "metric_value": 4200,
+  "logs_summary": "Checkout API p99 latency breached threshold. Recent logs show database connection acquisition timeouts and elevated 5xx rate."
+}
+

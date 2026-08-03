@@ -1,0 +1,11 @@
+{
+  "incident_id": "INC-1004",
+  "service_name": "email-consumer",
+  "severity": "Low",
+  "timestamp": "2026-06-27T10:15:00Z",
+  "alert_type": "SQSBacklog",
+  "metric_name": "approximate_number_of_messages_visible",
+  "metric_value": 18000,
+  "logs_summary": "SQS queue backlog increasing. Consumers are healthy but processing rate is below producer rate."
+}
+

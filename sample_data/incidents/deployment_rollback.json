@@ -1,0 +1,11 @@
+{
+  "incident_id": "INC-1005",
+  "service_name": "payment-api",
+  "severity": "Critical",
+  "timestamp": "2026-06-27T10:20:00Z",
+  "alert_type": "ErrorRateAfterDeploy",
+  "metric_name": "http_5xx_rate",
+  "metric_value": 18.4,
+  "logs_summary": "5xx rate increased immediately after deployment version 2026.06.27.1. Error signature: invalid merchant routing config."
+}
+

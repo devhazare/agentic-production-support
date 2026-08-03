@@ -1,0 +1,74 @@
+[
+  {
+    "incident_id": "INC-2024-001",
+    "timestamp": "2024-01-15T14:32:00Z",
+    "service": "payment-service",
+    "alert_type": "CPUUtilization",
+    "severity": "HIGH",
+    "metrics": {"cpu_percent": 92.5, "memory_mb": 1200, "error_rate": 0.03, "latency_p99_ms": 4500},
+    "logs_snippet": "ERROR: Thread pool exhausted. Queue size: 512. Rejecting request after 30s wait.",
+    "resolved": true,
+    "resolution": "Scaled deployment from 3 to 6 replicas. Increased thread pool maxThreads=200. Root cause: upstream traffic spike from marketing campaign.",
+    "mttr_minutes": 12
+  },
+  {
+    "incident_id": "INC-2024-002",
+    "timestamp": "2024-01-22T09:15:00Z",
+    "service": "user-service",
+    "alert_type": "MemoryUtilization",
+    "severity": "CRITICAL",
+    "metrics": {"cpu_percent": 45.0, "memory_mb": 3800, "error_rate": 0.15, "latency_p99_ms": 12000},
+    "logs_snippet": "WARN: GC overhead limit exceeded. java.lang.OutOfMemoryError: Java heap space at java.util.HashMap.resize",
+    "resolved": true,
+    "resolution": "Identified unbounded session cache HashMap. Replaced with Caffeine LRU cache (maxSize=10000, TTL=30min). Added heap alert at 80%. Pod restarted.",
+    "mttr_minutes": 35
+  },
+  {
+    "incident_id": "INC-2024-003",
+    "timestamp": "2024-02-01T03:44:00Z",
+    "service": "order-service",
+    "alert_type": "DatabaseConnections",
+    "severity": "HIGH",
+    "metrics": {"cpu_percent": 30.0, "memory_mb": 900, "error_rate": 0.45, "latency_p99_ms": 8000, "db_connections": 198, "db_max_connections": 200},
+    "logs_snippet": "ERROR: HikariPool-1 - Connection is not available, request timed out after 30000ms. Active:25 Idle:0 Max:25",
+    "resolved": true,
+    "resolution": "Killed 45 idle DB connections. Increased HikariCP pool from 10 to 25. Added 30s connection timeout. Added pool_pre_ping=True. Deployed hotfix.",
+    "mttr_minutes": 18
+  },
+  {
+    "incident_id": "INC-2024-L03",
+    "timestamp": "2024-06-11T08:20:00Z",
+    "service": "ml-inference",
+    "alert_type": "LogAnomaly",
+    "severity": "HIGH",
+    "metrics": {"cpu_percent": 88.0, "memory_mb": 7900},
+    "logs_snippet": "torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 2.50 GiB. Allocated: 7.8GiB / 8.0GiB on ml-inference device=cuda:0",
+    "resolved": true,
+    "resolution": "Batch size not adjusted after GPU instance downgrade A100 (40GB) to T4 (16GB). Fixed: dynamic batch sizing using torch.cuda.get_device_properties(). Set batch_size=32 (was 128). Restarted service. Canary deployment enforced for future model updates.",
+    "mttr_minutes": 28
+  },
+  {
+    "incident_id": "INC-2024-L06",
+    "timestamp": "2024-10-17T14:30:00Z",
+    "service": "data-pipeline",
+    "alert_type": "LogAnomaly",
+    "severity": "HIGH",
+    "metrics": {"error_rate": 0.05},
+    "logs_snippet": "WARNING data-pipeline - Kafka consumer lag at 8240 messages (threshold: 5000). Topic: product-events, Group: ml-pipeline",
+    "resolved": true,
+    "resolution": "Single-threaded consumer could not keep up with product event burst after catalog import (8000 events/min). Fixed: consumer threads scaled 1 to 8. Added lag alerting at 5000 message threshold. Set partition assignment to cooperative-sticky strategy.",
+    "mttr_minutes": 20
+  },
+  {
+    "incident_id": "INC-2024-L07",
+    "timestamp": "2024-11-05T09:00:00Z",
+    "service": "cache-service",
+    "alert_type": "LogAnomaly",
+    "severity": "MEDIUM",
+    "metrics": {"error_rate": 0.08},
+    "logs_snippet": "ERROR celery-worker - redis.exceptions.ConnectionError: Error 111 connecting to localhost:6379. Connection refused. Task failed after 3 retries.",
+    "resolved": true,
+    "resolution": "Redis container ran out of memory and was OOM-killed by the OS. Increased Redis maxmemory to 2GB, set maxmemory-policy=allkeys-lru. Added Redis memory monitoring. Added health check to celery worker startup.",
+    "mttr_minutes": 15
+  }
+]

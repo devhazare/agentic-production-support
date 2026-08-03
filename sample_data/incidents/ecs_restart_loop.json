@@ -1,0 +1,11 @@
+{
+  "incident_id": "INC-1003",
+  "service_name": "catalog-worker",
+  "severity": "High",
+  "timestamp": "2026-06-27T10:10:00Z",
+  "alert_type": "ECSTaskRestartLoop",
+  "metric_name": "task_restart_count",
+  "metric_value": 12,
+  "logs_summary": "ECS task exits during readiness probe. Container health check failed repeatedly after config deployment."
+}
+

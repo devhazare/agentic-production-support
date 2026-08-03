@@ -1,0 +1,13 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      USE_AWS: "false"
+      LOCAL_DATA_DIR: "sample_data"
+      LOCAL_STORE_PATH: ".local/incident_store.json"
+      LOCAL_AUDIT_PATH: ".local/audit_log.jsonl"
+    volumes:
+      - ./.local:/app/.local
+
