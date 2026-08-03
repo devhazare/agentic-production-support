@@ -1,27 +1,163 @@
 # Agentic Support Framework
 
-AI operations MVP for incident detection, root-cause analysis, decisioning, and
-mock remediation. It combines FastAPI, LangGraph, local RAG with FAISS, log
-watchers, a Streamlit dashboard, and optional AWS reference integrations.
+Agentic AI Operations and Production Support platform for incident ingestion,
+root-cause analysis, RAG-assisted investigation, human-in-the-loop approval, and
+safe remediation simulation in Python.
 
-The default setup runs locally in mock mode without cloud credentials or a live
-LLM. Remediation is designed as a safe demo flow unless you explicitly wire real
-execution backends.
+## 1. Overview
 
-## What It Does
+Agentic Support Framework is a reference implementation for building AI-assisted
+incident management workflows. It combines FastAPI, Streamlit, agent
+orchestration, local RAG with FAISS, log anomaly detection, and optional AWS
+reference integrations.
 
-- Accepts incident alerts through a FastAPI API.
-- Parses and correlates Magento, AEM, Java, and Python logs.
-- Runs a multi-agent workflow for detection, RCA, decisioning, remediation,
-  validation, and communication.
-- Retrieves runbook and incident context from a local FAISS-backed knowledge
-  base.
-- Exposes a Streamlit dashboard for incidents, anomalies, agent activity, and
-  RAG history.
-- Includes optional AWS/Bedrock/OpenSearch/S3/DynamoDB/Terraform reference
-  components for production-style architecture exploration.
+The project is intended for developers, SREs, platform engineers, architects,
+researchers, and recruiters who want to understand how an agentic incident
+workflow can be structured. It is currently an MVP/reference implementation, not
+a drop-in production remediation system.
 
-## Quick Start
+By default, the project runs in local mock mode. This keeps setup simple and
+prevents accidental calls to cloud services or live remediation targets.
+
+## 2. Problem Statement
+
+Production support teams often deal with repeated incidents, fragmented
+runbooks, noisy alerts, manual triage, slow RCA, and risky remediation decisions.
+This project explores how agentic workflows can help operators:
+
+- Normalize incident context from alerts, logs, and sample payloads.
+- Retrieve relevant runbooks and previous incident knowledge.
+- Generate structured AI-assisted RCA and remediation plans.
+- Apply decision policies before taking action.
+- Route higher-risk incidents to human approval.
+- Preserve incident history and audit context for later review.
+
+The repository does not claim production performance improvements. It provides a
+working foundation for experimentation and extension.
+
+## 3. What the Platform Does
+
+The current implementation supports two related incident workflows:
+
+- A versioned FastAPI agent pipeline under `/api/v1`.
+- An AI Ops MVP workflow under unversioned `/incidents/...` and `/knowledge/...`
+  endpoints.
+
+The system can receive incident payloads, classify severity, retrieve knowledge,
+generate mock or LLM-backed RCA, evaluate decision rules, request approval,
+simulate remediation, validate outcomes, prepare communication payloads, and
+persist selected runtime state locally or through optional adapters.
+
+## 4. Key Capabilities
+
+- FastAPI API for incident analysis, approval, RAG search, RAG rebuild, health,
+  and dashboard telemetry.
+- Streamlit operator dashboard backed by runtime API responses.
+- Agent pipeline for detection, RCA, decisioning, remediation planning,
+  validation, and communication payload generation.
+- LangGraph-style MVP workflow with fallback graph execution when LangGraph is
+  unavailable.
+- Local FAISS vector index over Markdown, text, PSV knowledge files, and sample
+  incident history.
+- Default embedding model: `all-MiniLM-L6-v2`, with offline TF-IDF fallback.
+- Mock LLM provider for safe local demos and tests.
+- Ollama provider for local live LLM calls when `APP_MODE=live`.
+- Optional AWS reference path for Bedrock, S3, OpenSearch, DynamoDB, and Lambda.
+- Log parsers and watchers for Magento, AEM, Java, and Python log formats.
+- Human approval endpoints and approval-state transitions.
+- Simulated remediation and generated communication/report objects.
+
+## 5. Current Implementation Status
+
+| Capability | Status | Notes |
+|---|---|---|
+| Incident ingestion | Implemented | `POST /api/v1/incidents/analyze` and `POST /incidents/trigger` accept structured payloads. |
+| Sample incident execution | Implemented | `scripts/simulate_incident.py` posts sample payloads to `/incidents/trigger`. |
+| Log monitoring | Partial | File watchers and parsers exist for Magento, AEM, Java, and Python. They require configured local log paths. |
+| Dashboard | Implemented | Streamlit UI in `ui/dashboard.py` reads API health and dashboard telemetry. |
+| LLM summary/RCA | Mocked by default, partial live support | Mock provider is default. Ollama is implemented for live local calls. Bedrock wrapper exists for the MVP path when AWS is enabled. |
+| OpenAI/Anthropic providers | Not available | Settings reference these providers, but provider modules are not present in the current tree. |
+| RAG | Implemented locally, partial cloud path | `/api/v1/rag/*` uses FAISS plus embeddings. MVP knowledge service uses local keyword scoring or optional S3/OpenSearch. |
+| Embeddings | Implemented | Default `all-MiniLM-L6-v2`; falls back to TF-IDF/SVD if SentenceTransformers cannot load. |
+| Decision routing | Implemented | Severity/confidence matrix and MVP confidence/risk policy route incidents. |
+| Human approval | Implemented | Approval/reject endpoints update state and can continue simulated remediation. |
+| Remediation | Mocked/simulated | Remediation plans are generated; execution uses simulated or dry-run behavior, not real infrastructure changes. |
+| Verification | Partial | Deterministic validation checks exist; no live CloudWatch/Kubernetes/synthetic health verification is implemented. |
+| Communication | Partial/mocked | Slack/Jira/stakeholder payloads are generated, but real delivery is not implemented. |
+| Persistence | Partial | Local JSON state exists for the MVP workflow; MongoDB adapter is optional for versioned pipeline results; DynamoDB is optional when AWS is enabled. |
+| Learning | Partial/planned | Final incident records and audit logs are stored; automatic model learning or knowledge-base improvement is not implemented. |
+| Deployment | Experimental | Docker and Terraform reference files exist, but production hardening is still required. |
+
+## 6. End-to-End Operating Flow
+
+The implemented flow is:
+
+Incident source
+-> API or configured log watcher
+-> payload validation
+-> severity/classification
+-> knowledge retrieval
+-> AI-assisted or mock RCA
+-> remediation recommendation
+-> risk/confidence policy decision
+-> human approval when required
+-> simulated remediation when allowed or approved
+-> deterministic validation
+-> communication payload generation
+-> local/optional persistence and audit recording
+
+High-risk or low-confidence incidents are routed to approval instead of being
+automatically remediated. Remediation execution is intentionally simulated in the
+current codebase.
+
+## 7. Architecture
+
+```mermaid
+flowchart LR
+    A[Incident Sources] --> B[FastAPI]
+    B --> C[Detection and Validation]
+    C --> D[Knowledge Retrieval]
+    D --> E[RCA Agent]
+    E --> F[Decision Policy]
+    F --> G{Approval Required?}
+    G -->|Yes| H[Human Approval API]
+    G -->|No| I[Simulated Remediation]
+    H --> I
+    I --> J[Validation]
+    J --> K[Communication Payloads]
+    K --> L[Persistence and Audit]
+    L --> M[Streamlit Dashboard]
+
+    N[Knowledge Files] --> O[FAISS Index]
+    O --> D
+    P[Optional AWS S3/OpenSearch] --> D
+    Q[Mock/Ollama/Bedrock LLM] --> E
+```
+
+More detail: [docs/architecture.md](docs/architecture.md).
+
+## 8. Repository Structure
+
+```text
+agents/              Agent implementations and MVP workflow nodes
+api/                 FastAPI application and routers
+core/                Settings, logging, events, and exceptions
+log_monitors/        Log parsers and file watchers
+models/              Domain models and Pydantic API schemas
+orchestration/       Agent pipeline and LangGraph-style workflow
+rag/                 FAISS indexer and retriever
+services/            LLM, AWS, persistence, audit, and observability services
+sample_data/         Safe sample incidents, runbooks, and RCA documents
+sample_app/          Small app used for local log-generation experiments
+scripts/             Utility scripts for samples, indexing, packaging, and tests
+tests/               Unit tests
+ui/                  Streamlit dashboard
+docs/                Public project documentation
+```
+
+## 9. Quick Start
+
+Requires Python 3.11.
 
 ```bash
 python3.11 -m venv .venv
@@ -42,15 +178,17 @@ Open:
 - API health: http://localhost:8000/api/v1/health
 - API docs: http://localhost:8000/api/v1/docs
 
-Start the dashboard in a second terminal:
+Start the dashboard in another terminal:
 
 ```bash
 streamlit run ui/dashboard.py
 ```
 
-Open: http://localhost:8501
+Open:
 
-## Demo Incident
+- Dashboard: http://localhost:8501
+
+## 10. Run a Sample Incident
 
 With the API running:
 
@@ -58,139 +196,106 @@ With the API running:
 python scripts/simulate_incident.py sample_data/incidents/checkout_latency.json
 ```
 
-You can also use the sample payloads in `HOW_TO_RUN.md` or the included
-Postman collection.
+This posts to the MVP endpoint `POST /incidents/trigger`.
 
-## Safety Notes
+## 11. RAG
 
-- `.env.example` defaults to local/mock-friendly settings.
-- `USE_AWS=false` keeps AWS integrations disabled.
-- Local incident and audit state is written under `.local/`, which is ignored by
-  Git.
-- Generated FAISS index files are ignored and can be rebuilt from the curated
-  knowledge base.
+The versioned RAG API uses:
 
-## Documentation
+- Vector store: FAISS
+- Default embedding model: `all-MiniLM-L6-v2`
+- Fallback: local TF-IDF + SVD + normalization
+- Knowledge path: `./data/knowledge_base`
+- Sample incident history: `./data/sample_incidents/incidents.json`
 
-- Full runbook: [HOW_TO_RUN.md](HOW_TO_RUN.md)
-- Architecture: [docs/architecture.md](docs/architecture.md)
-- Deployment notes: [docs/deployment.md](docs/deployment.md)
-- AWS production readiness: [docs/aws_production_readiness.md](docs/aws_production_readiness.md)
-- Open-source readiness notes: [OPEN_SOURCE_READINESS_REPORT.md](OPEN_SOURCE_READINESS_REPORT.md)
-
-## Architecture Patterns
-
----
-
-### Design Patterns Applied
-
-| Pattern | Where used |
-|---|---|
-| **Template Method** | `BaseAgent.run()` — skeleton algorithm, subclasses override `_execute()` |
-| **Strategy** | `LLMProviderProtocol`, `SeverityScorer`, `ActionExecutor`, `LogParser` |
-| **Factory** | `LLMFactory`, `LogParserFactory`, `OrchestratorBuilder` |
-| **Builder** | `OrchestratorBuilder` — wires full DI graph |
-| **Observer / Pub-Sub** | `EventBus` — agents publish domain events, never call each other directly |
-| **Chain of Responsibility** | `Orchestrator` — routes payload through detection → RCA → decision → remediation |
-| **Command** | `RemediationStep` — each step is an executable command |
-| **Repository** | `FAISSIndexer` / `RAGRetriever` — abstracts vector storage |
-| **Composite** | `MultiSourceWatcher` — aggregates multiple log watchers |
-| **Facade** | `Orchestrator` hides agent wiring from API layer |
-| **Singleton** | `get_settings()`, `get_event_bus()` — module-level cached instances |
-| **Context Object** | `AgentContext` — carries cross-cutting state through pipeline |
-| **Value Object** | `Metrics`, `LogLine`, `ContextChunk` — immutable, no identity |
-| **Entity** | `Incident` — has identity (`incident_id`), mutable lifecycle |
-
----
-
-### Python Standards
-
-- **Type hints** on all public functions and class attributes
-- **`from __future__ import annotations`** in every module (PEP 563)
-- **Pydantic v2** for all external data (API schemas, settings)
-- **Dataclasses** for internal domain objects
-- **Abstract base classes** (`abc.ABC`) for all interfaces
-- **`match` statement** (Python 3.10+) in `LLMFactory`
-- **`structlog`** for structured, context-aware logging (never `print()`)
-- **`pytest-asyncio`** for async agent tests
-- **Exception hierarchy** — never raise bare `Exception`
-
----
-
-### Project Structure
-
-```
-agentic-framework/
-├── agents/
-│   ├── base/           Template Method base agent
-│   ├── detection/      IncidentDetectionAgent
-│   ├── rca/            RCAAgent (RAG + LLM)
-│   ├── decision/       DecisionAgent (severity matrix)
-│   └── remediation/    RemediationAgent (Command pattern)
-├── orchestration/      Orchestrator + Builder
-├── rag/
-│   ├── indexer/        FAISSIndexer (Repository)
-│   └── retriever/      RAGRetriever
-├── log_monitors/
-│   ├── parsers/        LogParser strategies (Magento/AEM/Java/Python)
-│   └── watchers/       LogWatcher + MultiSourceWatcher (Observer)
-├── services/
-│   └── llm/            LLMFactory + provider strategies
-├── core/
-│   ├── config/         Pydantic Settings (Singleton)
-│   ├── events/         EventBus (Pub-Sub)
-│   ├── exceptions/     Domain exception hierarchy
-│   └── logging/        structlog setup
-├── models/             Domain entities + Pydantic API schemas
-├── api/
-│   └── v1/routers/     FastAPI routers (OpenAPI-documented)
-└── tests/
-    ├── unit/           Agent + parser unit tests (mocked deps)
-    └── integration/    End-to-end pipeline tests
-```
-
-## AI operational intelligence MVP
-
-This repo now includes the CloudWatch/EventBridge-style incident workflow in the existing FastAPI app:
-
-- `POST /incidents/trigger`
-- `GET /incidents/{incident_id}`
-- `POST /incidents/{incident_id}/approve`
-- `POST /incidents/{incident_id}/reject`
-- `GET /incidents`
-- `GET /health`
-- `POST /knowledge/upload`
-- `POST /knowledge/reindex`
-
-The MVP uses LangGraph for orchestration in `orchestration/langgraph_workflow.py`, Bedrock/OpenSearch/S3/DynamoDB wrappers under `services/`, and mock Slack/Jira/remediation integrations. Local mode is the default and stores incident history in `.local/`.
-
-Demo:
+Useful commands:
 
 ```bash
-uvicorn api.main:app --reload --port 8000
-python scripts/simulate_incident.py sample_data/incidents/checkout_latency.json
+curl http://localhost:8000/api/v1/rag/health
+curl -X POST http://localhost:8000/api/v1/rag/rebuild
 ```
 
-AWS deployment baseline:
+More detail: [docs/rag_and_llm.md](docs/rag_and_llm.md).
+
+## 12. LLM Modes
+
+Default local mode:
+
+```env
+APP_MODE=mock
+```
+
+Mock mode uses deterministic built-in responses and does not call external LLMs.
+
+Local live mode with Ollama:
+
+```env
+APP_MODE=live
+LLM_PROVIDER=ollama
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.2
+```
+
+The MVP workflow also has an optional Bedrock wrapper when `USE_AWS=true`.
+
+## 13. Configuration
+
+Configuration is loaded from `.env` by Pydantic settings in
+`core/config/settings.py`. Start from `.env.example`.
+
+Full configuration notes: [docs/configuration.md](docs/configuration.md).
+
+## 14. Tests
 
 ```bash
-./scripts/package_lambda.sh
-cd infra/terraform
-terraform init
-terraform plan
-terraform apply
+pytest tests/ -q
 ```
 
-See [docs/deployment.md](docs/deployment.md) and [docs/aws_production_readiness.md](docs/aws_production_readiness.md).
+The tests cover agent logic, log parsing, Bedrock RCA response parsing, Magento
+log generation behavior, and MVP workflow routing.
 
----
+## 15. Docker
 
-## Running tests
+The repository includes a simple API container:
 
 ```bash
-pytest tests/ -v
+docker compose up --build
 ```
 
-## License
+This starts the API on port `8000`. The Streamlit dashboard is run separately.
+
+## 16. Current Limitations
+
+- Remediation is simulated or dry-run oriented.
+- Real Slack/Jira delivery is not implemented.
+- OpenAI and Anthropic provider modules are referenced by configuration but not
+  present in the current source tree.
+- Cloud deployment files are reference/experimental and require review before
+  production use.
+- Automatic learning from incident outcomes into the knowledge base is not
+  implemented.
+- Some sample/generated files should be cleaned before public release; see
+  [docs/project_status.md](docs/project_status.md).
+
+## 17. Documentation
+
+- [Architecture](docs/architecture.md)
+- [Configuration](docs/configuration.md)
+- [API Reference](docs/api_reference.md)
+- [RAG and LLM](docs/rag_and_llm.md)
+- [Operations Guide](docs/operations.md)
+- [Project Status and Release Audit](docs/project_status.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security](SECURITY.md)
+- [Changelog](CHANGELOG.md)
+
+## 18. Contributing
+
+Contributions should keep local mock mode safe, avoid committing secrets or
+generated artifacts, and include tests or documentation for behavior changes.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## 19. License
 
 MIT. See [LICENSE](LICENSE).

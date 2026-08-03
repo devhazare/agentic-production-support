@@ -1,40 +1,30 @@
-# AWS Production Movement Checklist
+# AWS Production Readiness
 
-This project is now structured for an AWS MVP deployment path. It is not a full enterprise production platform, but the infrastructure is no longer just a placeholder.
+The repository contains optional AWS reference components, but they are not
+production-ready as-is.
 
-## Ready
+## Implemented or Referenced
 
-- API Gateway HTTP API fronts a Lambda-hosted FastAPI MVP app.
-- EventBridge can invoke incident-ingestion Lambda for CloudWatch-style events.
-- DynamoDB on-demand tables store incidents and audit logs with PITR enabled.
-- S3 knowledge bucket has public access blocked, versioning, and SSE.
-- OpenSearch Serverless vector collection has encryption, network, and data access policies.
-- Bedrock Claude Sonnet is invoked through `bedrock-runtime`.
-- Mock remediation is isolated to a Lambda dry-run handler.
-- Lambda package script builds a smaller AWS artifact from `requirements-lambda.txt`.
+- Bedrock Runtime wrapper for MVP RCA generation.
+- S3-backed knowledge document loading/uploading when `USE_AWS=true`.
+- OpenSearch Serverless search/index path when configured.
+- DynamoDB incident and audit storage when `USE_AWS=true`.
+- Lambda packaging scripts.
+- Terraform reference files.
 
-## Deployment Commands
+## Required Before Production
 
-```bash
-./scripts/package_lambda.sh
-cd infra/terraform
-terraform init
-terraform plan
-terraform apply
-```
+- Review IAM permissions for least privilege.
+- Configure Terraform remote state and locking.
+- Move secrets into AWS Secrets Manager or another managed secret store.
+- Add authentication and authorization in front of the API.
+- Add request validation, rate limits, and WAF/API Gateway controls.
+- Add CloudWatch dashboards, alarms, traces, and audit retention.
+- Add rollback and incident response procedures.
+- Review Bedrock model choice, data retention, and prompt logging policy.
+- Replace mock remediation with reviewed executors.
 
-## Required AWS Account Setup
+## Current Safety Position
 
-- Enable Bedrock access for `anthropic.claude-3-5-sonnet-20240620-v1:0` or override `bedrock_model_id`.
-- Ensure the Terraform caller can create IAM roles, Lambda, API Gateway, DynamoDB, S3, EventBridge, CloudWatch Logs, and OpenSearch Serverless resources.
-- For private OpenSearch, create VPC endpoints and pass their IDs through `opensearch_allowed_vpc_endpoint_ids`.
-
-## Remaining Before Enterprise Production
-
-- Add API authentication/authorization.
-- Restrict API Gateway CORS.
-- Add WAF/rate limits if public.
-- Move Terraform state to an encrypted remote backend with locking.
-- Add CI/CD packaging, scanning, and deployment approvals.
-- Add alarms for Lambda errors/throttles, DynamoDB throttles, API Gateway 5xx, and Bedrock failures.
-- Add OpenSearch index migration/versioning if schema evolves.
+Keep `USE_AWS=false` for local development and public demos unless the AWS
+environment has been reviewed.

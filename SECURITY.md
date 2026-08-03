@@ -2,32 +2,83 @@
 
 ## Supported Use
 
-This project is published as an AI operations MVP and reference implementation.
-Local mock mode is the recommended default for demos and development.
+Agentic Support Framework is currently an MVP/reference implementation for AI
+Operations and Production Support workflows.
 
-Automated remediation integrations are mock or dry-run oriented unless you
-explicitly connect cloud credentials and production systems.
+Recommended default mode:
+
+```env
+APP_MODE=mock
+USE_AWS=false
+```
+
+In this mode, the project avoids external LLM calls and cloud service calls.
+Remediation remains simulated.
+
+## Current Security Limitations
+
+The current codebase does not provide:
+
+- API authentication.
+- Role-based authorization.
+- Production approval identity management.
+- Real secret-management integration.
+- Production-grade remediation guardrails.
+- Full prompt-injection protection.
+- Complete PII detection.
+
+Do not expose this API publicly without adding appropriate security controls.
 
 ## Reporting a Vulnerability
 
-Please do not open public issues for secrets, credential exposure, or exploitable
-security bugs.
+Please do not open public issues for:
 
-Report security concerns privately to the repository owner. Include:
+- Credential exposure.
+- Exploitable security bugs.
+- Prompt-injection bypasses.
+- Privilege-escalation paths.
+- Sensitive data disclosure.
 
-- Affected component or endpoint
-- Reproduction steps
-- Impact
-- Suggested mitigation, if known
+Report privately to the repository owner or maintainer. Include:
+
+- Affected component or endpoint.
+- Reproduction steps.
+- Impact.
+- Suggested mitigation, if known.
+- Whether any secret or private data was exposed.
+
+## Secret Handling
+
+Never commit:
+
+- `.env`
+- API keys
+- Cloud credentials
+- OAuth tokens
+- Slack/Jira tokens
+- Private keys
+- Terraform state
+- Production logs
+- Customer or personal data
+
+If a real secret was committed, deleting it from the current file is not enough.
+Rotate the credential and remove it from Git history before publishing.
 
 ## Public Release Checklist
 
-Before publishing forks or derivative projects, verify that these files are not
-committed:
+Before publishing a fork or derivative project:
 
-- `.env`
-- Cloud credentials
-- Terraform state files
-- Local logs
-- IDE settings
-- Generated FAISS pickle/index artifacts
+- Run a secret scan over the working tree and Git history.
+- Confirm `.env` is ignored and not staged.
+- Confirm local state under `.local/` is not staged.
+- Confirm Terraform state files are not staged.
+- Confirm generated FAISS index and pickle files are not staged.
+- Confirm generated logs are not staged.
+- Review sample data for private information.
+- Review Postman collections and scripts for concrete private URLs.
+
+## Responsible AI Notes
+
+This project uses LLMs for summarization, RCA, and remediation-plan generation.
+Operators should review generated output before relying on it. High-risk actions
+should require human approval and independent verification.
