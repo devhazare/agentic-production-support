@@ -1,21 +1,17 @@
-# Cost Estimate
+# Cost Estimate Notes
 
-The MVP is designed for pay-as-used operation.
+No fixed cloud cost estimate is included because costs depend on region, usage,
+model selection, request volume, vector index size, retention, and deployment
+topology.
 
-Likely monthly costs in low-volume demo usage:
+Potential cost areas for the optional AWS path:
 
-- Lambda: near free tier for ingestion and mock remediation.
-- DynamoDB on-demand: small cents to a few dollars for incident and audit records.
-- S3: cents for runbooks and RCA documents.
-- CloudWatch Logs: cents to low dollars depending on log volume and retention.
-- Bedrock Claude Sonnet: variable by input/output tokens; keep retrieved context small and top-k at 5.
-- OpenSearch Serverless: can be the largest fixed-ish cost. For the cheapest demo, use local retrieval or provision only for short evaluation windows.
+- Bedrock model inference.
+- OpenSearch Serverless collection usage.
+- DynamoDB reads/writes and storage.
+- S3 storage and requests.
+- Lambda invocations and duration.
+- CloudWatch logs and metrics.
+- NAT gateways or VPC networking if introduced.
 
-Cost controls:
-
-- Keep `rag_top_k=5`.
-- Scrub and truncate logs before model calls.
-- Use DynamoDB PAY_PER_REQUEST.
-- Use Lambda instead of always-on ECS/EKS.
-- Avoid SageMaker endpoints, fine-tuning jobs, and production remediation infrastructure in MVP.
-
+For local mock mode, cloud cost should be zero when `USE_AWS=false`.
