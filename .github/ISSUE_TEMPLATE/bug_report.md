@@ -36,7 +36,8 @@ What happened instead?
 ## Logs or Screenshots
 
 Paste only sanitized logs. Do not include secrets, tokens, customer data, or
-production incident data.
+production incident data. Also redact infrastructure names, project/file paths,
+capacity values, hostnames, IP addresses, account IDs, and model prompts.
 
 ## Additional Context
 

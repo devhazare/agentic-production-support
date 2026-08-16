@@ -42,6 +42,10 @@ How should this be labeled?
 Does this affect secrets, approval, live remediation, production data, cloud
 credentials, or external service calls?
 
+If this adds or changes LLM or embedding inputs, explain how the model egress
+sanitization layer protects PII, secrets, infrastructure names, file paths,
+capacity details, and project metadata.
+
 ## Additional Context
 
 Add examples, diagrams, or related links.

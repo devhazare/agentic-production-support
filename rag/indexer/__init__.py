@@ -14,6 +14,7 @@ import numpy as np
 
 from core.exceptions import VectorStoreError, VectorStoreNotInitialisedError
 from core.logging import get_logger
+from services.model_egress import sanitize_for_embedding
 
 logger = get_logger(__name__)
 
@@ -62,6 +63,7 @@ class FAISSIndexer:
             return
 
         embedder = self._get_embedder(chunks)
+        chunks = [self._sanitize_chunk_for_embedding(chunk) for chunk in chunks]
         texts = [c["text"] for c in chunks]
         logger.info("rag.indexer.encoding", count=len(texts),
                     embedder=embedder.__class__.__name__)
@@ -157,6 +159,16 @@ class FAISSIndexer:
                         "chunk_id": inc["incident_id"],
                     })
         return all_chunks
+
+    def _sanitize_chunk_for_embedding(self, chunk: dict) -> dict:
+        sanitized = sanitize_for_embedding(str(chunk.get("text", "")), self._settings)
+        safe_chunk = chunk.copy()
+        safe_chunk["text"] = sanitized.text
+        if sanitized.was_modified:
+            safe_chunk["model_egress_redactions"] = {
+                item.category: item.count for item in sanitized.redactions
+            }
+        return safe_chunk
 
     @staticmethod
     def _chunk_text(text: str, source: str,

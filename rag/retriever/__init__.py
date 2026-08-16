@@ -11,6 +11,7 @@ import numpy as np
 from core.logging import get_logger
 from models import ContextChunk
 from rag.indexer import FAISSIndexer
+from services.model_egress import sanitize_for_embedding
 
 logger = get_logger(__name__)
 
@@ -29,7 +30,8 @@ class RAGRetriever:
             logger.warning("rag.retrieve.no_embedder")
             return []
 
-        q_vec = embedder.encode([query])
+        safe_query = sanitize_for_embedding(query, self._settings).text
+        q_vec = embedder.encode([safe_query])
         raw = self._indexer.search(q_vec, top_k=k)
 
         chunks = [
@@ -41,5 +43,5 @@ class RAGRetriever:
             )
             for r in raw
         ]
-        logger.debug("rag.retrieve", query_len=len(query), returned=len(chunks))
+        logger.debug("rag.retrieve", query_len=len(safe_query), returned=len(chunks))
         return chunks

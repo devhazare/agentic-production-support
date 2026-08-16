@@ -7,8 +7,8 @@ from typing import Any
 from core.config.settings import Settings
 from models import IncidentEvent, KnowledgeDocument, RCAOutput
 from services.audit_log import AuditService
+from services.model_egress import sanitize_for_model
 from services.observability import get_observability
-from utils.security import scrub_sensitive_text
 
 
 class BedrockRCAClient:
@@ -23,12 +23,14 @@ class BedrockRCAClient:
 
     def generate_rca(self, event: IncidentEvent, docs: list[KnowledgeDocument]) -> RCAOutput:
         started = time.perf_counter()
-        prompt = self._build_prompt(event, docs)
+        prompt_payload = sanitize_for_model(self._build_prompt(event, docs), purpose="bedrock_rca")
+        prompt = prompt_payload.text
         self.audit.record(
             "bedrock_model_call_requested",
             event.incident_id,
             model_id=self.settings.bedrock_model_id,
             citations=[doc.source_uri for doc in docs],
+            redactions=sum(item.count for item in prompt_payload.redactions),
         )
         if not self._client:
             output = self._mock_rca(event, docs)
@@ -70,10 +72,10 @@ class BedrockRCAClient:
 
     def _build_prompt(self, event: IncidentEvent, docs: list[KnowledgeDocument]) -> str:
         context = "\n\n".join(
-            f"Source: {doc.source_uri}\nTitle: {doc.title}\n{scrub_sensitive_text(doc.text)}"
+            f"Source: {doc.source_uri}\nTitle: {doc.title}\n{doc.text}"
             for doc in docs
         )
-        incident = scrub_sensitive_text(event.model_dump_json())
+        incident = event.model_dump_json()
         return f"""
 Return JSON with keys: probable_root_cause, supporting_evidence,
 similar_incident_references, recommended_action, recommended_action_type,
@@ -147,11 +149,12 @@ Retrieved context:
         if event.severity.value in {"High", "Critical"}:
             risk = "high"
         citations = [doc.source_uri for doc in docs[:5]]
+        logs_summary = sanitize_for_model(event.logs_summary, purpose="mock_rca_evidence").text
         return RCAOutput(
             probable_root_cause=cause,
             supporting_evidence=[
                 f"{event.metric_name}={event.metric_value}",
-                scrub_sensitive_text(event.logs_summary)[:300],
+                logs_summary[:300],
             ],
             similar_incident_references=[doc.title for doc in docs if doc.doc_type == "rca"][:3],
             recommended_action=f"Run {action} as a dry-run MVP remediation after policy checks.",

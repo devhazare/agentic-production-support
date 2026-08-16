@@ -107,7 +107,12 @@ mock action services in the current codebase.
 ## Grounding and Safety Notes
 
 - Retrieved documents are passed into RCA prompts as grounding context.
-- The MVP workflow scrubs simple prompt-injection and sensitive-text patterns.
+- Model-bound prompts and embedding inputs pass through the model egress
+  sanitization layer before provider calls.
+- The egress layer redacts PII, secrets, file paths, infrastructure identifiers,
+  project/resource names, host/IP data, and capacity values before LLM or
+  embedding use.
+- See `docs/model_egress_governance.md` for policy and enforcement points.
 - Citation checks exist in `scripts/evaluate_rca.py`.
 - Human review is required for high-risk or low-confidence MVP incidents.
 - No automatic knowledge-base learning is implemented yet.

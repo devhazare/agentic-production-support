@@ -27,6 +27,8 @@ Describe the change and why it is needed.
 ## Safety Checklist
 
 - [ ] I did not commit `.env`, secrets, local logs, generated vector indexes, Terraform state, or build artifacts.
+- [ ] New LLM or embedding inputs pass through the model egress sanitization layer.
+- [ ] I did not include raw infra names, project paths, capacity details, PII, or secrets in prompts, embeddings, docs, tests, logs, or examples.
 - [ ] Mock/local mode still works.
 - [ ] New behavior is clearly labeled as implemented, partial, mocked, experimental, or planned.
 - [ ] Documentation was updated where needed.
