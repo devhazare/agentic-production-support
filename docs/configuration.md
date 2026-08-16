@@ -50,6 +50,16 @@ uvicorn api.main:app --reload --port 8000
 | `LLM_MAX_TOKENS` | `1000` | Used by LLM service calls. |
 | `LLM_TIMEOUT_SEC` | `120` | Used by Ollama HTTP client. |
 
+## Model Egress Governance
+
+| Variable | Default | Notes |
+|---|---|---|
+| `MODEL_EGRESS_SANITIZATION_ENABLED` | `true` | Redacts sensitive data before LLM and embedding calls. |
+| `MODEL_EGRESS_FAIL_CLOSED` | `true` | Blocks model calls if high-risk secrets remain after sanitization. |
+| `MODEL_EGRESS_REDACTION_TOKEN` | `[MODEL_REDACTED]` | Token used for model-bound redactions. |
+
+See `docs/model_egress_governance.md` for the full policy.
+
 ## Embeddings and RAG
 
 | Variable | Default | Purpose |

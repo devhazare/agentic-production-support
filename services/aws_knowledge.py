@@ -8,6 +8,7 @@ from pathlib import Path
 
 from core.config.settings import Settings
 from models import IncidentEvent, KnowledgeDocument
+from services.model_egress import sanitize_for_embedding
 
 TOKEN_RE = re.compile(r"[a-zA-Z0-9_/-]+")
 VECTOR_DIMENSIONS = 128
@@ -92,9 +93,15 @@ class KnowledgeService:
         if self._os:
             self._ensure_vector_index()
             for doc in docs:
+                safe_title = sanitize_for_embedding(doc.title, self.settings).text
+                safe_text = sanitize_for_embedding(doc.text, self.settings).text
+                safe_source = sanitize_for_embedding(doc.source_uri, self.settings).text
                 body = {
                     **doc.model_dump(),
-                    "content_vector": text_vector(f"{doc.title} {doc.text}"),
+                    "title": safe_title,
+                    "source_uri": safe_source,
+                    "text": safe_text,
+                    "content_vector": text_vector(f"{safe_title} {safe_text}"),
                 }
                 # OpenSearch Serverless vector collections reject explicit IDs on
                 # create/index requests. Keep the stable document_id in the body
@@ -104,7 +111,10 @@ class KnowledgeService:
 
     def search(self, event: IncidentEvent, top_k: int | None = None) -> list[KnowledgeDocument]:
         top_k = top_k or self.settings.rag_top_k
-        query = f"{event.service_name} {event.alert_type} {event.metric_name} {event.logs_summary}"
+        query = sanitize_for_embedding(
+            f"{event.service_name} {event.alert_type} {event.metric_name} {event.logs_summary}",
+            self.settings,
+        ).text
         if self._os:
             try:
                 result = self._os.search(

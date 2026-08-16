@@ -43,6 +43,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
+        protected_namespaces=("settings_",),
     )
 
     # ── Project ────────────────────────────────────────────────────────────
@@ -104,6 +105,9 @@ class Settings(BaseSettings):
     confidence_review_threshold: float = Field(default=0.75, ge=0.0, le=1.0)
     auto_mock_confidence_threshold: float = Field(default=0.85, ge=0.0, le=1.0)
     pii_scrub_replacement: str = "[REDACTED]"
+    model_egress_sanitization_enabled: bool = True
+    model_egress_fail_closed: bool = True
+    model_egress_redaction_token: str = "[MODEL_REDACTED]"
 
     # ── Log sources ───────────────────────────────────────────────────────
     # Set to an exact file path, or "disabled" to skip that source.

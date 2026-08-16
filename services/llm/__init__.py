@@ -20,6 +20,7 @@ import httpx
 from core.config.settings import LLMProvider as LLMProviderEnum, Settings
 from core.exceptions import LLMConnectionError, LLMError
 from core.logging import get_logger
+from services.model_egress import sanitize_for_model
 from services.observability import get_observability
 
 logger = get_logger(__name__)
@@ -206,34 +207,37 @@ class LLMService:
         max_tokens: int = 1000,
     ) -> str:
         start = time.perf_counter()
+        sanitized = sanitize_for_model(prompt, purpose="llm_prompt")
+        safe_prompt = sanitized.text
         try:
             result = await self._provider.generate(
-                prompt, system=system, temperature=temperature, max_tokens=max_tokens
+                safe_prompt, system=system, temperature=temperature, max_tokens=max_tokens
             )
             duration_ms = int((time.perf_counter() - start) * 1000)
             get_observability().record_llm_usage(
                 provider=getattr(self._provider, "provider_name", self._provider.__class__.__name__),
                 model=getattr(self._provider, "model_name", "unknown"),
-                prompt=prompt,
+                prompt=safe_prompt,
                 response=result,
                 duration_ms=duration_ms,
                 status="ok",
             )
             logger.info(
                 "llm.generate.ok",
-                prompt_len=len(prompt),
+                prompt_len=len(safe_prompt),
                 response_len=len(result),
                 duration_ms=duration_ms,
+                redactions=sum(item.count for item in sanitized.redactions),
             )
             return result
         except LLMConnectionError:
             logger.warning("llm.generate.connection_error — falling back to mock")
-            result = await MockProvider().generate(prompt, system=system)
+            result = await MockProvider().generate(safe_prompt, system=system)
             duration_ms = int((time.perf_counter() - start) * 1000)
             get_observability().record_llm_usage(
                 provider="mock-fallback",
                 model="mock-llm",
-                prompt=prompt,
+                prompt=safe_prompt,
                 response=result,
                 duration_ms=duration_ms,
                 status="fallback",
